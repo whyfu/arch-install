@@ -3,10 +3,14 @@
 echo "[General]
 EnableNetworkConfiguration=true
 EnableIPv6=true" > /etc/iwd/main.conf
-iwctl --passphrase pass station wlan0 connect "SSID"
-echo "sleeping for 5s to connect to wifi"
-sleep 5
-reflector --country sg --latest 10 --download-timeout 60 --verbose --sort rate --save /etc/pacman.d/mirrorlist
+# iwctl station wlan0 connect "SSID"
+# echo "sleeping for 5s to connect to wifi"
+# sleep 5
+# reflector --protocol https,http --latest 10 --country us,de --download-timeout 60 --verbose --sort rate --save /etc/pacman.d/mirrorlist
+# cloudfare is a real one for this, may be late to sync tho
+echo "Server = https://cloudflaremirrors.com/archlinux/\$repo/os/\$arch" > /etc/pacman.d/mirrorlist
+systemctl disable reflector.service
+systemctl mask reflector.service
 pacman-key --init
 
 # x86-64_v3 binaries from ALHP repos
@@ -22,14 +26,12 @@ if ! grep -Fq "core-x86-64-v3" /etc/pacman.conf;
 then
 	sed 's/#VerbosePkgLists/VerbosePkgLists/' -i /etc/pacman.conf
 	sed 's/#ParallelDownloads/ParallelDownloads/' -i /etc/pacman.conf
-	sed -z 's/default mirrors./default mirrors.\n\n[core-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[extra-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[community-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist/' -i /etc/pacman.conf && echo "
-[linuxkernels]
-Server = http://nhameh.ovh/\$repo/\$arch/
-SigLevel = Optional TrustAll" >> /etc/pacman.conf;
+	sed -z 's/default mirrors./default mirrors.\n\n[core-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[extra-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[community-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist/' -i /etc/pacman.conf
 fi
-pacman -Sy
+pacman -Syy
 
 cat <<EOF > nvme0n1.sfdisk
+label: gpt
 unit: sectors
 first-lba: 34
 last-lba: 1000215182
@@ -43,8 +45,8 @@ read -p "Format? <y/N>: " prompt1
 if [ $prompt1 == "y" ]
 then
 	# WIPE disk
-	wipefs -a /dev/nvme0n1
-	blkdiscard /dev/nvme0n1
+	wipefs -a -f /dev/nvme0n1
+	blkdiscard -f -v /dev/nvme0n1
 	
 	sfdisk /dev/nvme0n1 < nvme0n1.sfdisk
 
@@ -67,7 +69,7 @@ read -p "Install Packages? <y/N>: " prompt2
 if [ $prompt2 == "y" ]
 then
 	# install packages
-	pacstrap /mnt sudo bash-completion base mkinitcpio kmod iwd linux-amd-znver2 linux-amd-znver2-headers amd-ucode nano networkmanager linux-firmware sof-firmware grub efibootmgr
+	pacstrap /mnt sudo bash-completion base mkinitcpio kmod iwd linux linux-headers amd-ucode nano linux-firmware sof-firmware grub efibootmgr
 	cp /etc/pacman.conf /mnt/etc/ && cp /etc/pacman.d/alhp-mirrorlist /mnt/etc/pacman.d/
 
 	#generate fs table
@@ -91,14 +93,18 @@ en_US.UTF-8 UTF-8
 locale-gen
 echo "LANG=en_US.UTF-8" > /etc/locale.conf
 echo "craptop" > /etc/hostname
+grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=arch
+systemctl disable reflector.service
+systemctl mask reflector.service
+pacman -Syu noto-fonts noto-fonts-emoji noto-fonts-cjk networkmanager gnome-shell gdm gnome-control-center eog nautilus file-roller gnome-text-editor gnome-terminal gnome-calculator gnome-calendar xdg-user-dirs-gtk wireplumber pipewire pipewire-pulse pipewire-alsa pipewire-jack firefox libva-mesa-driver ffmpeg nvidia-dkms power-profiles-daemon tpm2-tss
+
+# use iwd as networkmanager backend
 echo "[device]
 wifi.backend=iwd
 " > /etc/NetworkManager/conf.d/wifi_backend.conf
-grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=arch
-pacman -Syu noto-fonts noto-fonts-emoji noto-fonts-cjk gnome-shell wireplumber pipewire pipewire-pulse pipewire-alsa pipewire-jack webp-pixbuf-loader xdg-user-dirs-gtk gedit gnome-keyring gnome-control-center eog gnome-calendar gnome-terminal nautilus gnome-calculator gdm gvfs-mtp firefox libva-mesa-driver ffmpeg power-profiles-daemon nvidia-dkms file-roller
 
 # enable amd-pstate driver
-echo "blacklist acpi_cpufreq" > /etc/modprobe.d/amd-pstate.conf && echo "amd_pstate" > /etc/modules-load.d/amd-pstate.conf
+echo "blacklist acpi_cpufreq" > /etc/modprobe.d/amd-pstate.conf
 
 # enable runtime D3 support from the module
 echo options nvidia \"NVreg_DynamicPowerManagement=0x02\" > /etc/modprobe.d/nvidia.conf
@@ -114,7 +120,10 @@ echo SUBSYSTEM==\"block\", ENV{ID_FS_TYPE}==\"ntfs\", ENV{ID_FS_TYPE}=\"ntfs3\" 
 echo SUBSYSTEM==\"pci\", ATTR{power/control}=\"auto\" > /etc/udev/rules.d/80-nvidia-pm.rules
 
 # glvnd stuff
-rm /usr/share/glvnd/egl_vendor.d/10_nvidia.json
+mv /usr/share/glvnd/egl_vendor.d/10_nvidia.json /usr/share/glvnd/egl_vendor.d/99_nvidia.json
+
+# what in the name of all things silicon?
+rm -f /usr/share/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
 
 # GNOME wayland force
 sed -e '/RUN+="\/usr\/lib\/gdm-runtime-config set daemon PreferredDisplayServer xorg"/ s/^#*/#/' -e '/RUN+="\/usr\/lib\/gdm-runtime-config set daemon WaylandEnable false"/ s/^#*/#/' /usr/lib/udev/rules.d/61-gdm.rules > /etc/udev/rules.d/61-gdm.rules
@@ -122,7 +131,7 @@ echo "MOZ_ENABLE_WAYLAND=1" >> /etc/environment
 echo "__GL_SHADER_DISK_CACHE_SKIP_CLEANUP=1" >> /etc/environment
 
 # bootloader settings
-sed -i -e 's/quiet/quiet mitigations=off pcie_aspm=force/' /etc/default/grub
+sed -i -e 's/quiet/quiet mitigations=off pcie_aspm=force amd_pstate=passive/' /etc/default/grub
 sed -i -e 's/nvidia-drm.modeset=1//g' /etc/default/grub && grub-mkconfig -o /boot/grub/grub.cfg
 
 systemctl enable gdm.service
