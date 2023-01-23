@@ -155,6 +155,7 @@ echo "MOZ_ENABLE_WAYLAND=1" >> /etc/environment
 echo "__GL_SHADER_DISK_CACHE_SKIP_CLEANUP=1" >> /etc/environment
 
 # disable bluetooth
+systemctl enable bluetooth.service
 sed 's/#AutoEnable=true/AutoEnable=false/' -i /etc/bluetooth/main.conf
 
 # bootloader settings
