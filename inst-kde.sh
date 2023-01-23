@@ -3,12 +3,21 @@
 echo "[General]
 EnableNetworkConfiguration=true
 EnableIPv6=true" > /etc/iwd/main.conf
-# iwctl station wlan0 connect "wifiname"
+# iwctl station wlan0 connect "SSID"
 # echo "sleeping for 5s to connect to wifi"
 # sleep 5
 # reflector --protocol https,http --latest 10 --country us,de --download-timeout 60 --verbose --sort rate --save /etc/pacman.d/mirrorlist
 # cloudfare is a real one for this, may be late to sync tho
 echo "Server = https://cloudflaremirrors.com/archlinux/\$repo/os/\$arch" > /etc/pacman.d/mirrorlist
+echo "Server = https://de-mirror.chaotic.cx/\$repo/\$arch
+Server = https://de-2-mirror.chaotic.cx/\$repo/\$arch
+Server = https://de-3-mirror.chaotic.cx/\$repo/\$arch
+Server = https://de-4-mirror.chaotic.cx/\$repo/\$arch
+Server = https://in-mirror.chaotic.cx/\$repo/\$arch
+Server = https://in-2-mirror.chaotic.cx/\$repo/\$arch
+Server = https://in-3-mirror.chaotic.cx/\$repo/\$arch
+" > /etc/pacman.d/chaotic-mirrorlist
+
 systemctl disable reflector.service
 systemctl mask reflector.service
 pacman-key --init
@@ -22,14 +31,19 @@ sleep 1;
 pacman-key -a alhp.gpg
 pacman-key --lsign-key 2E3B2B05A332A7DB9019797848998B4039BED1CA
 pacman-key --lsign-key 0D4D2FDAF45468F3DDF59BEDE3D0D2CD3952E298
+
+# chaotic aur repo keys
+pacman-key --recv-key FBA220DFC880C036 --keyserver keyserver.ubuntu.com
+pacman-key --lsign-key FBA220DFC880C036
+
 if ! grep -Fq "core-x86-64-v3" /etc/pacman.conf;
 then
 	sed 's/#VerbosePkgLists/VerbosePkgLists/' -i /etc/pacman.conf
 	sed 's/#ParallelDownloads/ParallelDownloads/' -i /etc/pacman.conf
-	sed -z 's/default mirrors./default mirrors.\n\n[core-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[extra-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[community-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist/' -i /etc/pacman.conf && echo "
-[linuxkernels]
-Server = http://nhameh.ovh/\$repo/\$arch/
-SigLevel = Optional TrustAll" >> /etc/pacman.conf;
+	sed 's/#[multilib]\n#/[multilib]\n' -i /etc/pacman.conf
+	sed -z 's/default mirrors./default mirrors.\n\n[core-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[extra-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[community-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist/' -i /etc/pacman.conf
+	echo "[chaotic-aur]
+Include = /etc/pacman.d/chaotic-mirrorlist" >> /etc/pacman.conf
 fi
 pacman -Syy
 
@@ -50,7 +64,7 @@ then
 	# WIPE disk
 	wipefs -a -f /dev/nvme0n1
 	blkdiscard -f -v /dev/nvme0n1
-	
+
 	sfdisk /dev/nvme0n1 < nvme0n1.sfdisk
 
 	# format partitions
@@ -72,8 +86,8 @@ read -p "Install Packages? <y/N>: " prompt2
 if [ $prompt2 == "y" ]
 then
 	# install packages
-	pacstrap /mnt sudo bash-completion base mkinitcpio kmod iwd linux-zen linux-zen-headers amd-ucode nano linux-firmware sof-firmware grub efibootmgr
-	cp /etc/pacman.conf /mnt/etc/ && cp /etc/pacman.d/alhp-mirrorlist /mnt/etc/pacman.d/
+	pacstrap /mnt sudo bash-completion base mkinitcpio kmod iwd linux-tkg-bmq-generic_v3 linux-tkg-bmq-generic_v3-headers amd-ucode-git nano linux-firmware-git linux-firmware-whence-git sof-firmware grub efibootmgr tpm2-tss
+	cp /etc/pacman.conf /mnt/etc/ && cp /etc/pacman.d/*-mirrorlist /mnt/etc/pacman.d/
 
 	#generate fs table
 	genfstab -U /mnt >> /mnt/etc/fstab
@@ -99,7 +113,7 @@ echo "craptop" > /etc/hostname
 grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=arch
 systemctl disable reflector.service
 systemctl mask reflector.service
-pacman -Syu noto-fonts noto-fonts-emoji noto-fonts-cjk sddm-kcm plasma-desktop plasma-wayland-session plasma-nm plasma-pa powerdevil kscreen dolphin gwenview konsole wireplumber pipewire pipewire-pulse pipewire-alsa pipewire-jack firefox libva-mesa-driver ffmpeg nvidia-dkms
+pacman -Syu noto-fonts noto-fonts-emoji noto-fonts-cjk sddm-kcm plasma-desktop plasma-wayland-session plasma-nm plasma-pa powerdevil kscreen dolphin gwenview konsole ark wireplumber pipewire pipewire-pulse pipewire-alsa pipewire-jack firefox libva libva-mesa-driver ffmpeg nvidia-dkms power-profiles-daemon libva-utils mesa-utils usbutils
 
 # use iwd as networkmanager backend
 echo "[device]
@@ -125,11 +139,13 @@ echo SUBSYSTEM==\"pci\", ATTR{power/control}=\"auto\" > /etc/udev/rules.d/80-nvi
 # glvnd stuff
 rm -f /usr/share/glvnd/egl_vendor.d/10_nvidia.json
 
-# what in the name of all things silicon? (KDE fires up Xorg server on NVIDIA otherwise, nuking battery life)
+# what in the name of all things silicon?
 rm -f /usr/share/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
 
 # GNOME wayland force
 # sed -e '/RUN+="\/usr\/lib\/gdm-runtime-config set daemon PreferredDisplayServer xorg"/ s/^#*/#/' -e '/RUN+="\/usr\/lib\/gdm-runtime-config set daemon WaylandEnable false"/ s/^#*/#/' /usr/lib/udev/rules.d/61-gdm.rules > /etc/udev/rules.d/61-gdm.rules
+
+# misc
 echo "MOZ_ENABLE_WAYLAND=1" >> /etc/environment
 echo "__GL_SHADER_DISK_CACHE_SKIP_CLEANUP=1" >> /etc/environment
 
