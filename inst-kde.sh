@@ -42,8 +42,7 @@ then
 	sed 's/#ParallelDownloads/ParallelDownloads/' -i /etc/pacman.conf
 	sed 's/#[multilib]\n#/[multilib]\n' -i /etc/pacman.conf
 	sed -z 's/default mirrors./default mirrors.\n\n[core-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[extra-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[community-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist/' -i /etc/pacman.conf
-	echo "[chaotic-aur]
-Include = /etc/pacman.d/chaotic-mirrorlist" >> /etc/pacman.conf
+	echo $'[chaotic-aur]\nInclude = /etc/pacman.d/chaotic-mirrorlist' >> /etc/pacman.conf
 fi
 pacman -Syy
 
@@ -113,7 +112,7 @@ echo "craptop" > /etc/hostname
 grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=arch
 systemctl disable reflector.service
 systemctl mask reflector.service
-pacman -Syu noto-fonts noto-fonts-emoji noto-fonts-cjk sddm-kcm plasma-desktop plasma-wayland-session plasma-nm plasma-pa powerdevil kscreen dolphin gwenview konsole ark wireplumber pipewire pipewire-pulse pipewire-alsa pipewire-jack firefox libva libva-mesa-driver ffmpeg nvidia-dkms power-profiles-daemon libva-utils mesa-utils usbutils
+pacman -Syu noto-fonts noto-fonts-emoji noto-fonts-cjk sddm-kcm plasma-desktop plasma-wayland-session plasma-nm plasma-pa powerdevil kscreen dolphin gwenview konsole ark wireplumber pipewire pipewire-pulse pipewire-alsa pipewire-jack firefox libva libva-mesa-driver ffmpeg nvidia-dkms power-profiles-daemon libva-utils mesa-utils usbutils gamemode
 
 # use iwd as networkmanager backend
 echo "[device]
