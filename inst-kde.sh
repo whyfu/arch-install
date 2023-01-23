@@ -26,6 +26,7 @@ pacman-key --init
 curl -o alhp-mirrorlist https://git.harting.dev/ALHP/alhp-mirrorlist/raw/branch/master/mirrorlist
 cp alhp-mirrorlist /etc/pacman.d/
 curl -O https://git.harting.dev/ALHP/alhp-keyring/raw/branch/master/alhp.gpg
+curl -O https://raw.githubusercontent.com/chaotic-aur/keyring/master/chaotic.gpg
 echo "downloaded alhp repo files"
 sleep 1;
 pacman-key -a alhp.gpg
@@ -33,14 +34,19 @@ pacman-key --lsign-key 2E3B2B05A332A7DB9019797848998B4039BED1CA
 pacman-key --lsign-key 0D4D2FDAF45468F3DDF59BEDE3D0D2CD3952E298
 
 # chaotic aur repo keys
-pacman-key --recv-key FBA220DFC880C036 --keyserver keyserver.ubuntu.com
-pacman-key --lsign-key FBA220DFC880C036
+pacman-key -a chaotic.gpg
+pacman-key --lsign-key EF925EA60F33D0CB85C44AD13056513887B78AEB
+pacman-key --lsign-key 1949E60D299007430C94DC0657F3D9CC660431DD
+pacman-key --lsign-key 3C3BE09E904072467EFEF0A395A6D49D0BBD2A8B
+pacman-key --lsign-key A3873AB27021C5DD39E0501AFBA220DFC880C036
+pacman-key --lsign-key 1F0716DC94015CAC77FA65B619A2282AFCA8A81E
+pacman-key --lsign-key 67BF8CA6DA181643C9723B4ED6C9442437365605
 
 if ! grep -Fq "core-x86-64-v3" /etc/pacman.conf;
 then
 	sed 's/#VerbosePkgLists/VerbosePkgLists/' -i /etc/pacman.conf
 	sed 's/#ParallelDownloads/ParallelDownloads/' -i /etc/pacman.conf
-	sed 's/#[multilib]\n#/[multilib]\n' -i /etc/pacman.conf
+	sed -z 's/#[multilib]\n#/[multilib]\n/' -i /etc/pacman.conf
 	sed -z 's/default mirrors./default mirrors.\n\n[core-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[extra-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[community-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist/' -i /etc/pacman.conf
 	echo $'[chaotic-aur]\nInclude = /etc/pacman.d/chaotic-mirrorlist' >> /etc/pacman.conf
 fi
@@ -112,7 +118,7 @@ echo "craptop" > /etc/hostname
 grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=arch
 systemctl disable reflector.service
 systemctl mask reflector.service
-pacman -Syu noto-fonts noto-fonts-emoji noto-fonts-cjk sddm-kcm plasma-desktop plasma-wayland-session plasma-nm plasma-pa powerdevil kscreen dolphin gwenview konsole ark wireplumber pipewire pipewire-pulse pipewire-alsa pipewire-jack firefox libva libva-mesa-driver ffmpeg nvidia-dkms power-profiles-daemon libva-utils mesa-utils usbutils gamemode
+pacman -Syu noto-fonts noto-fonts-emoji noto-fonts-cjk sddm-kcm plasma-desktop plasma-wayland-session plasma-nm plasma-pa powerdevil kate bluedevil kscreen dolphin gwenview konsole ark wireplumber pipewire pipewire-pulse pipewire-alsa pipewire-jack firefox libva libva-mesa-driver ffmpeg nvidia-dkms power-profiles-daemon libva-utils mesa-utils usbutils gamemode
 
 # use iwd as networkmanager backend
 echo "[device]
@@ -147,6 +153,9 @@ rm -f /usr/share/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
 # misc
 echo "MOZ_ENABLE_WAYLAND=1" >> /etc/environment
 echo "__GL_SHADER_DISK_CACHE_SKIP_CLEANUP=1" >> /etc/environment
+
+# disable bluetooth
+sed 's/#AutoEnable=true/AutoEnable=false/' -i /etc/bluetooth/main.conf
 
 # bootloader settings
 sed -i -e 's/quiet/quiet mitigations=off pcie_aspm=force amd_pstate=passive/' /etc/default/grub
