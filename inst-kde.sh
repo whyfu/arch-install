@@ -118,7 +118,7 @@ echo "craptop" > /etc/hostname
 grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=arch
 systemctl disable reflector.service
 systemctl mask reflector.service
-pacman -Syu noto-fonts noto-fonts-emoji noto-fonts-cjk sddm-kcm plasma-desktop plasma-wayland-session plasma-nm plasma-pa powerdevil kate bluedevil kscreen dolphin gwenview konsole ark wireplumber pipewire pipewire-pulse pipewire-alsa pipewire-jack firefox libva libva-mesa-driver ffmpeg nvidia-dkms power-profiles-daemon libva-utils mesa-utils usbutils gamemode
+pacman -Syu noto-fonts noto-fonts-emoji noto-fonts-cjk networkmanager gnome-shell-performance mutter-performance gdm gnome-control-center eog nautilus file-roller gnome-text-editor gnome-terminal gnome-calculator gnome-calendar xdg-user-dirs-gtk wireplumber pipewire pipewire-pulse pipewire-alsa pipewire-jack firefox libva-mesa-driver libva ffmpeg nvidia-dkms power-profiles-daemon libva-utils mesa-utils usbutils gamemode
 
 # use iwd as networkmanager backend
 echo "[device]
@@ -142,13 +142,13 @@ echo SUBSYSTEM==\"block\", ENV{ID_FS_TYPE}==\"ntfs\", ENV{ID_FS_TYPE}=\"ntfs3\" 
 echo SUBSYSTEM==\"pci\", ATTR{power/control}=\"auto\" > /etc/udev/rules.d/80-nvidia-pm.rules
 
 # glvnd stuff
-rm -f /usr/share/glvnd/egl_vendor.d/10_nvidia.json
+mv /usr/share/glvnd/egl_vendor.d/10_nvidia.json /usr/share/glvnd/egl_vendor.d/99_nvidia.json
 
 # what in the name of all things silicon?
 rm -f /usr/share/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
 
 # GNOME wayland force
-# sed -e '/RUN+="\/usr\/lib\/gdm-runtime-config set daemon PreferredDisplayServer xorg"/ s/^#*/#/' -e '/RUN+="\/usr\/lib\/gdm-runtime-config set daemon WaylandEnable false"/ s/^#*/#/' /usr/lib/udev/rules.d/61-gdm.rules > /etc/udev/rules.d/61-gdm.rules
+sed -e '/RUN+="\/usr\/lib\/gdm-runtime-config set daemon PreferredDisplayServer xorg"/ s/^#*/#/' -e '/RUN+="\/usr\/lib\/gdm-runtime-config set daemon WaylandEnable false"/ s/^#*/#/' /usr/lib/udev/rules.d/61-gdm.rules > /etc/udev/rules.d/61-gdm.rules
 
 # misc
 echo "MOZ_ENABLE_WAYLAND=1" >> /etc/environment
@@ -162,7 +162,7 @@ sed 's/#AutoEnable=true/AutoEnable=false/' -i /etc/bluetooth/main.conf
 sed -i -e 's/quiet/quiet mitigations=off pcie_aspm=force amd_pstate=passive/' /etc/default/grub
 sed -i -e 's/nvidia-drm.modeset=1//g' /etc/default/grub && grub-mkconfig -o /boot/grub/grub.cfg
 
-systemctl enable sddm.service
+systemctl enable gdm.service
 systemctl disable avahi-daemon.socket
 systemctl disable avahi-daemon.service
 systemctl mask avahi-daemon.socket
