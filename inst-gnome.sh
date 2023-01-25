@@ -142,7 +142,7 @@ echo SUBSYSTEM==\"block\", ENV{ID_FS_TYPE}==\"ntfs\", ENV{ID_FS_TYPE}=\"ntfs3\" 
 echo SUBSYSTEM==\"pci\", ATTR{power/control}=\"auto\" > /etc/udev/rules.d/80-nvidia-pm.rules
 
 # glvnd stuff
-mv /usr/share/glvnd/egl_vendor.d/10_nvidia.json /usr/share/glvnd/egl_vendor.d/99_nvidia.json
+mv /usr/share/glvnd/egl_vendor.d/10_nvidia.json ~/Downloads/
 
 # what in the name of all things silicon?
 rm -f /usr/share/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
