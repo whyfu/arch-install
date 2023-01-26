@@ -118,7 +118,7 @@ echo "craptop" > /etc/hostname
 grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=arch
 systemctl disable reflector.service
 systemctl mask reflector.service
-pacman -Syu noto-fonts noto-fonts-emoji noto-fonts-cjk networkmanager gnome-shell-performance mutter-performance gdm gnome-control-center eog nautilus file-roller gnome-text-editor gnome-terminal gnome-calculator gnome-calendar xdg-user-dirs-gtk wireplumber pipewire pipewire-pulse pipewire-alsa pipewire-jack firefox libva-mesa-driver libva ffmpeg nvidia-dkms power-profiles-daemon libva-utils mesa-utils usbutils gamemode
+pacman -Syu noto-fonts noto-fonts-emoji noto-fonts-cjk networkmanager gnome-shell-performance mutter-performance gdm gnome-control-center eog nautilus file-roller gnome-text-editor gnome-terminal gnome-calculator gnome-calendar xdg-user-dirs-gtk wireplumber pipewire pipewire-pulse pipewire-alsa pipewire-jack firefox libva-mesa-driver libva ffmpeg nvidia-dkms power-profiles-daemon libva-utils mesa-utils vulkan-icd-loader vulkan-radeon usbutils gamemode gamescope
 
 # use iwd as networkmanager backend
 echo "[device]
@@ -145,7 +145,7 @@ echo SUBSYSTEM==\"pci\", ATTR{power/control}=\"auto\" > /etc/udev/rules.d/80-nvi
 mv /usr/share/glvnd/egl_vendor.d/10_nvidia.json ~/Downloads/
 
 # what in the name of all things silicon?
-rm -f /usr/share/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
+mv /usr/share/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf ~/Downloads/
 
 # GNOME wayland force
 sed -e '/RUN+="\/usr\/lib\/gdm-runtime-config set daemon PreferredDisplayServer xorg"/ s/^#*/#/' -e '/RUN+="\/usr\/lib\/gdm-runtime-config set daemon WaylandEnable false"/ s/^#*/#/' /usr/lib/udev/rules.d/61-gdm.rules > /etc/udev/rules.d/61-gdm.rules
