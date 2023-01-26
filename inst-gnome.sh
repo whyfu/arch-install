@@ -7,8 +7,14 @@ EnableIPv6=true" > /etc/iwd/main.conf
 # echo "sleeping for 5s to connect to wifi"
 # sleep 5
 # reflector --protocol https,http --latest 10 --country us,de --download-timeout 60 --verbose --sort rate --save /etc/pacman.d/mirrorlist
-# cloudfare is a real one for this, may be late to sync tho
-echo "Server = https://cloudflaremirrors.com/archlinux/\$repo/os/\$arch" > /etc/pacman.d/mirrorlist
+
+echo "Server = https://geo.mirror.pkgbuild.com/\$repo/os/\$arch
+Server = http://mirror.rackspace.com/archlinux/\$repo/os/\$arch
+Server = https://mirror.rackspace.com/archlinux/\$repo/os/\$arch
+Server = http://phinau.de/arch/\$repo/os/\$arch
+Server = https://phinau.de/arch/\$repo/os/\$arch
+Server = https://cloudflaremirrors.com/archlinux/\$repo/os/\$arch
+" > /etc/pacman.d/mirrorlist
 echo "Server = https://de-mirror.chaotic.cx/\$repo/\$arch
 Server = https://de-2-mirror.chaotic.cx/\$repo/\$arch
 Server = https://de-3-mirror.chaotic.cx/\$repo/\$arch
@@ -91,7 +97,10 @@ read -p "Install Packages? <y/N>: " prompt2
 if [ $prompt2 == "y" ]
 then
 	# install packages
-	pacstrap /mnt sudo bash-completion base mkinitcpio kmod iwd linux-tkg-bmq-generic_v3 linux-tkg-bmq-generic_v3-headers amd-ucode-git nano linux-firmware-git linux-firmware-whence-git sof-firmware grub efibootmgr tpm2-tss
+	pacstrap /mnt sudo bash-completion base mkinitcpio kmod iwd \
+	linux-tkg-bmq-generic_v3 linux-tkg-bmq-generic_v3-headers \
+	amd-ucode-git nano linux-firmware-git linux-firmware-whence-git \
+	sof-firmware grub efibootmgr tpm2-tss
 	cp /etc/pacman.conf /mnt/etc/ && cp /etc/pacman.d/*-mirrorlist /mnt/etc/pacman.d/
 
 	#generate fs table
@@ -118,7 +127,13 @@ echo "craptop" > /etc/hostname
 grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=arch
 systemctl disable reflector.service
 systemctl mask reflector.service
-pacman -Syu noto-fonts noto-fonts-emoji noto-fonts-cjk networkmanager gnome-shell-performance mutter-performance gdm gnome-control-center eog nautilus file-roller gnome-text-editor gnome-terminal gnome-calculator gnome-calendar xdg-user-dirs-gtk wireplumber pipewire pipewire-pulse pipewire-alsa pipewire-jack chromium-wayland-vaapi libva-mesa-driver libva ffmpeg nvidia-dkms power-profiles-daemon libva-utils mesa-utils vulkan-icd-loader vulkan-tools vulkan-radeon usbutils gamemode gamescope
+pacman -Syu noto-fonts noto-fonts-emoji noto-fonts-cjk networkmanager \
+	gnome-shell gdm gnome-control-center eog nautilus file-roller \
+	gnome-text-editor gnome-terminal gnome-calculator gnome-calendar \
+	xdg-user-dirs-gtk wireplumber pipewire pipewire-pulse pipewire-alsa \
+	pipewire-jack chromium-wayland-vaapi libva-mesa-driver libva ffmpeg \
+	nvidia-dkms power-profiles-daemon libva-utils mesa-utils \
+	vulkan-icd-loader vulkan-tools vulkan-radeon usbutils gamemode gamescope
 
 # use iwd as networkmanager backend
 echo "[device]
