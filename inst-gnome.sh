@@ -151,7 +151,9 @@ mv /usr/share/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf ~/Downloads/
 sed -e '/RUN+="\/usr\/lib\/gdm-runtime-config set daemon PreferredDisplayServer xorg"/ s/^#*/#/' -e '/RUN+="\/usr\/lib\/gdm-runtime-config set daemon WaylandEnable false"/ s/^#*/#/' /usr/lib/udev/rules.d/61-gdm.rules > /etc/udev/rules.d/61-gdm.rules
 
 # misc
-echo "MOZ_ENABLE_WAYLAND=1" >> /etc/environment
+echo "--ozone-platform=wayland
+--enable-features=VaapiVideoDecoder
+" >> /etc/chromium-flags.conf
 echo "__GL_SHADER_DISK_CACHE_SKIP_CLEANUP=1" >> /etc/environment
 
 # disable bluetooth
