@@ -118,7 +118,7 @@ echo "craptop" > /etc/hostname
 grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=arch
 systemctl disable reflector.service
 systemctl mask reflector.service
-pacman -Syu noto-fonts noto-fonts-emoji noto-fonts-cjk networkmanager gnome-shell-performance mutter-performance gdm gnome-control-center eog nautilus file-roller gnome-text-editor gnome-terminal gnome-calculator gnome-calendar xdg-user-dirs-gtk wireplumber pipewire pipewire-pulse pipewire-alsa pipewire-jack firefox libva-mesa-driver libva ffmpeg nvidia-dkms power-profiles-daemon libva-utils mesa-utils vulkan-icd-loader vulkan-tools vulkan-radeon usbutils gamemode gamescope
+pacman -Syu noto-fonts noto-fonts-emoji noto-fonts-cjk networkmanager gnome-shell-performance mutter-performance gdm gnome-control-center eog nautilus file-roller gnome-text-editor gnome-terminal gnome-calculator gnome-calendar xdg-user-dirs-gtk wireplumber pipewire pipewire-pulse pipewire-alsa pipewire-jack ungoogled-chromium libva-mesa-driver libva ffmpeg nvidia-dkms power-profiles-daemon libva-utils mesa-utils vulkan-icd-loader vulkan-tools vulkan-radeon usbutils gamemode gamescope
 
 # use iwd as networkmanager backend
 echo "[device]
