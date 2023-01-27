@@ -182,6 +182,8 @@ echo "<driconf>
 </driconf>
 " > /etc/drirc
 
+echo ACTION==\"add\|change\", SUBSYSTEM==\"block\", ATTR{queue/rotational}==\"0\", KERNEL==\"nvme?n?\", ATTR{queue/scheduler}=\"kyber\" > /etc/udev/rules.d/60-iosched.rules
+
 # disable bluetooth
 systemctl enable bluetooth.service
 sed 's/#AutoEnable=true/AutoEnable=false/' -i /etc/bluetooth/main.conf
