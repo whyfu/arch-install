@@ -173,6 +173,14 @@ echo "--ozone-platform=wayland
 " >> /etc/chromium-flags.conf
 echo "__GL_SHADER_DISK_CACHE_SKIP_CLEANUP=1" >> /etc/environment
 echo "blacklist sp5100_tco" > /etc/modprobe.d/disable-sp5100-watchdog.conf
+echo "<driconf>
+   <device>
+       <application name="Default">
+           <option name="vblank_mode" value="0" />
+       </application>
+   </device>
+</driconf>
+" > /etc/drirc
 
 # disable bluetooth
 systemctl enable bluetooth.service
