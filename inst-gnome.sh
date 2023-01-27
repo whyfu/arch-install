@@ -178,7 +178,7 @@ systemctl enable bluetooth.service
 sed 's/#AutoEnable=true/AutoEnable=false/' -i /etc/bluetooth/main.conf
 
 # bootloader settings
-sed -i -e 's/quiet/quiet mitigations=off pcie_aspm=force amd_pstate=passive/' /etc/default/grub
+sed -i -e 's/quiet/quiet mitigations=off pcie_aspm=force amd_pstate=passive nmi_watchdog=0 nowatchdog/' /etc/default/grub
 sed -i -e 's/nvidia-drm.modeset=1//g' /etc/default/grub && grub-mkconfig -o /boot/grub/grub.cfg
 
 systemctl enable gdm.service
