@@ -105,6 +105,7 @@ then
 
 	#generate fs table
 	genfstab -U /mnt >> /mnt/etc/fstab
+	sed 's/relatime/noatime/g' -i /mnt/etc/fstab
 else
 	exit
 fi
