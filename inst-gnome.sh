@@ -172,6 +172,7 @@ echo "--ozone-platform=wayland
 --disable-features=UseChromeOSDirectVideoDecoder
 " >> /etc/chromium-flags.conf
 echo "__GL_SHADER_DISK_CACHE_SKIP_CLEANUP=1" >> /etc/environment
+echo "blacklist sp5100_tco" > /etc/modprobe.d/disable-sp5100-watchdog.conf
 
 # disable bluetooth
 systemctl enable bluetooth.service
