@@ -29,9 +29,9 @@ systemctl mask reflector.service
 pacman-key --init
 
 # x86-64_v3 binaries from ALHP repos
-curl -o alhp-mirrorlist https://git.harting.dev/ALHP/alhp-mirrorlist/raw/branch/master/mirrorlist
+curl -o alhp-mirrorlist https://somegit.dev/ALHP/alhp-mirrorlist/raw/branch/master/mirrorlist
 cp alhp-mirrorlist /etc/pacman.d/
-curl -O https://git.harting.dev/ALHP/alhp-keyring/raw/branch/master/alhp.gpg
+curl -O https://somegit.dev/ALHP/alhp-keyring/raw/branch/master/alhp.gpg
 curl -O https://raw.githubusercontent.com/chaotic-aur/keyring/master/chaotic.gpg
 echo "downloaded alhp repo files"
 sleep 1;
