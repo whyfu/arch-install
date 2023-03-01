@@ -9,7 +9,7 @@ EnableIPv6=true" > /etc/iwd/main.conf
 # reflector --protocol https,http --latest 10 --country us,de --download-timeout 60 --verbose --sort rate --save /etc/pacman.d/mirrorlist
 
 echo "Server = https://mirrors.rit.edu/archlinux/\$repo/os/\$arch
-https://geo.mirror.pkgbuild.com/\$repo/os/\$arch
+Server = https://geo.mirror.pkgbuild.com/\$repo/os/\$arch
 Server = http://mirror.rackspace.com/archlinux/\$repo/os/\$arch
 Server = https://mirror.rackspace.com/archlinux/\$repo/os/\$arch
 Server = http://phinau.de/arch/\$repo/os/\$arch
