@@ -16,14 +16,6 @@ Server = http://phinau.de/arch/\$repo/os/\$arch
 Server = https://phinau.de/arch/\$repo/os/\$arch
 Server = https://cloudflaremirrors.com/archlinux/\$repo/os/\$arch
 " > /etc/pacman.d/mirrorlist
-echo "Server = https://de-mirror.chaotic.cx/\$repo/\$arch
-Server = https://de-2-mirror.chaotic.cx/\$repo/\$arch
-Server = https://de-3-mirror.chaotic.cx/\$repo/\$arch
-Server = https://de-4-mirror.chaotic.cx/\$repo/\$arch
-Server = https://in-mirror.chaotic.cx/\$repo/\$arch
-Server = https://in-2-mirror.chaotic.cx/\$repo/\$arch
-Server = https://in-3-mirror.chaotic.cx/\$repo/\$arch
-" > /etc/pacman.d/chaotic-mirrorlist
 
 systemctl disable reflector.service
 systemctl mask reflector.service
@@ -32,8 +24,8 @@ pacman-key --init
 # x86-64_v3 binaries from ALHP repos
 curl -o alhp-mirrorlist https://somegit.dev/ALHP/alhp-mirrorlist/raw/branch/master/mirrorlist
 cp alhp-mirrorlist /etc/pacman.d/
+sed 's/#Server/Server/' -i /etc/pacman.d/alhp-mirrorlist
 curl -O https://somegit.dev/ALHP/alhp-keyring/raw/branch/master/alhp.gpg
-curl -O https://raw.githubusercontent.com/chaotic-aur/keyring/master/chaotic.gpg
 echo "downloaded alhp repo files"
 sleep 1;
 pacman-key -a alhp.gpg
@@ -41,13 +33,9 @@ pacman-key --lsign-key 2E3B2B05A332A7DB9019797848998B4039BED1CA
 pacman-key --lsign-key 0D4D2FDAF45468F3DDF59BEDE3D0D2CD3952E298
 
 # chaotic aur repo keys
-pacman-key -a chaotic.gpg
-pacman-key --lsign-key EF925EA60F33D0CB85C44AD13056513887B78AEB
-pacman-key --lsign-key 1949E60D299007430C94DC0657F3D9CC660431DD
-pacman-key --lsign-key 3C3BE09E904072467EFEF0A395A6D49D0BBD2A8B
-pacman-key --lsign-key A3873AB27021C5DD39E0501AFBA220DFC880C036
-pacman-key --lsign-key 1F0716DC94015CAC77FA65B619A2282AFCA8A81E
-pacman-key --lsign-key 67BF8CA6DA181643C9723B4ED6C9442437365605
+pacman-key --recv-key FBA220DFC880C036 --keyserver keyserver.ubuntu.com
+pacman-key --lsign-key FBA220DFC880C036
+pacman -U 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst' 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'
 
 if ! grep -Fq "core-x86-64-v3" /etc/pacman.conf;
 then
@@ -160,10 +148,10 @@ echo SUBSYSTEM==\"block\", ENV{ID_FS_TYPE}==\"ntfs\", ENV{ID_FS_TYPE}=\"ntfs3\" 
 echo SUBSYSTEM==\"pci\", ATTR{power/control}=\"auto\" > /etc/udev/rules.d/80-nvidia-pm.rules
 
 # glvnd stuff
-mv /usr/share/glvnd/egl_vendor.d/10_nvidia.json ~/Downloads/
+rm -rf /usr/share/glvnd/egl_vendor.d/10_nvidia.json
 
 # what in the name of all things silicon?
-mv /usr/share/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf ~/Downloads/
+rm -rf /usr/share/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
 
 # GNOME wayland force
 sed -e '/RUN+="\/usr\/lib\/gdm-runtime-config set daemon PreferredDisplayServer xorg"/ s/^#*/#/' -e '/RUN+="\/usr\/lib\/gdm-runtime-config set daemon WaylandEnable false"/ s/^#*/#/' /usr/lib/udev/rules.d/61-gdm.rules > /etc/udev/rules.d/61-gdm.rules
@@ -192,7 +180,7 @@ systemctl enable bluetooth.service
 sed 's/#AutoEnable=true/AutoEnable=false/' -i /etc/bluetooth/main.conf
 
 # bootloader settings
-sed -i -e 's/quiet/quiet mitigations=off pcie_aspm=force amd_pstate=active nmi_watchdog=0 nowatchdog/' /etc/default/grub
+sed -i -e 's/quiet/quiet mitigations=off pcie_aspm=force amd_pstate=passive nmi_watchdog=0 nowatchdog/' /etc/default/grub
 sed -i -e 's/nvidia-drm.modeset=1//g' /etc/default/grub && grub-mkconfig -o /boot/grub/grub.cfg
 
 systemctl enable gdm.service
