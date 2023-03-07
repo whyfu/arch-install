@@ -121,10 +121,10 @@ pacman -Syu noto-fonts noto-fonts-emoji noto-fonts-cjk networkmanager \\
 	gnome-shell gdm gnome-control-center eog nautilus file-roller \\
 	gnome-text-editor gnome-terminal gnome-calculator gnome-calendar \\
 	xdg-user-dirs-gtk wireplumber pipewire pipewire-pulse pipewire-alsa \\
-	pipewire-jack chromium-wayland-vaapi mesa-tkg-git libva-mesa-driver libva ffmpeg \\
-	nvidia-dkms power-profiles-daemon libva-utils mesa-utils \\
-	vulkan-icd-loader vulkan-tools vulkan-radeon usbutils gamemode gamescope \\
-	arc-gtk-theme
+	pipewire-jack chromium-wayland-vaapi mesa libva-mesa-driver libva \\
+	nvidia-dkms power-profiles-daemon libva-utils mesa-utils ffmpeg \\
+	vulkan-icd-loader vulkan-tools vulkan-radeon usbutils gamemode \\
+	gamescope arc-gtk-theme
 
 # use iwd as networkmanager backend
 echo "[device]
