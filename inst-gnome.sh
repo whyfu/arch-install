@@ -160,6 +160,7 @@ sed -e '/RUN+="\/usr\/lib\/gdm-runtime-config set daemon PreferredDisplayServer 
 echo "--ozone-platform=wayland
 --enable-features=VaapiVideoDecoder
 --enable-features=VaapiIgnoreDriverChecks
+--enable-features=OverlayScrollbar
 --disable-features=UseChromeOSDirectVideoDecoder
 " >> /etc/chromium-flags.conf
 echo "__GL_SHADER_DISK_CACHE_SKIP_CLEANUP=1" >> /etc/environment
