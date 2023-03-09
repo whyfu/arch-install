@@ -147,9 +147,6 @@ echo SUBSYSTEM==\"block\", ENV{ID_FS_TYPE}==\"ntfs\", ENV{ID_FS_TYPE}=\"ntfs3\" 
 # enable PCI power management
 echo SUBSYSTEM==\"pci\", ATTR{power/control}=\"auto\" > /etc/udev/rules.d/80-nvidia-pm.rules
 
-# glvnd stuff
-mv /usr/share/glvnd/egl_vendor.d/10_nvidia.json /usr/share/glvnd/egl_vendor.d/99_nvidia.json
-
 # what in the name of all things silicon?
 rm -rf /usr/share/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
 
@@ -163,8 +160,16 @@ echo "--ozone-platform=wayland
 --enable-features=OverlayScrollbar
 --disable-features=UseChromeOSDirectVideoDecoder
 " >> /etc/chromium-flags.conf
+
+# nvidia shader cache persistence fix
 echo "__GL_SHADER_DISK_CACHE_SKIP_CLEANUP=1" >> /etc/environment
+
+# nvidia egl fix: elegant edition
+echo "__EGL_VENDOR_LIBRARY_FILENAMES=\"/usr/share/glvnd/egl_vendor.d/50_mesa.json\"" >> /etc/environment
+
+# disable watchdogs
 echo "blacklist sp5100_tco" > /etc/modprobe.d/disable-sp5100-watchdog.conf
+
 echo "<driconf>
    <device>
        <application name="Default">
