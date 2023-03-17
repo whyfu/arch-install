@@ -7,26 +7,25 @@ EnableIPv6=true" > /etc/iwd/main.conf
 # echo "sleeping for 5s to connect to wifi"
 # sleep 5
 # reflector --protocol https,http --latest 10 --country us,de --download-timeout 60 --verbose --sort rate --save /etc/pacman.d/mirrorlist
-# cloudfare is a real one for this, may be late to sync tho
-echo "Server = https://cloudflaremirrors.com/archlinux/\$repo/os/\$arch" > /etc/pacman.d/mirrorlist
-echo "Server = https://de-mirror.chaotic.cx/\$repo/\$arch
-Server = https://de-2-mirror.chaotic.cx/\$repo/\$arch
-Server = https://de-3-mirror.chaotic.cx/\$repo/\$arch
-Server = https://de-4-mirror.chaotic.cx/\$repo/\$arch
-Server = https://in-mirror.chaotic.cx/\$repo/\$arch
-Server = https://in-2-mirror.chaotic.cx/\$repo/\$arch
-Server = https://in-3-mirror.chaotic.cx/\$repo/\$arch
-" > /etc/pacman.d/chaotic-mirrorlist
+
+echo "Server = https://mirrors.rit.edu/archlinux/\$repo/os/\$arch
+Server = https://geo.mirror.pkgbuild.com/\$repo/os/\$arch
+Server = http://mirror.rackspace.com/archlinux/\$repo/os/\$arch
+Server = https://mirror.rackspace.com/archlinux/\$repo/os/\$arch
+Server = http://phinau.de/arch/\$repo/os/\$arch
+Server = https://phinau.de/arch/\$repo/os/\$arch
+Server = https://cloudflaremirrors.com/archlinux/\$repo/os/\$arch
+" > /etc/pacman.d/mirrorlist
 
 systemctl disable reflector.service
 systemctl mask reflector.service
 pacman-key --init
 
 # x86-64_v3 binaries from ALHP repos
-curl -o alhp-mirrorlist https://git.harting.dev/ALHP/alhp-mirrorlist/raw/branch/master/mirrorlist
+curl -o alhp-mirrorlist https://somegit.dev/ALHP/alhp-mirrorlist/raw/branch/master/mirrorlist
 cp alhp-mirrorlist /etc/pacman.d/
-curl -O https://git.harting.dev/ALHP/alhp-keyring/raw/branch/master/alhp.gpg
-curl -O https://raw.githubusercontent.com/chaotic-aur/keyring/master/chaotic.gpg
+sed 's/#Server/Server/' -i /etc/pacman.d/alhp-mirrorlist
+curl -O https://somegit.dev/ALHP/alhp-keyring/raw/branch/master/alhp.gpg
 echo "downloaded alhp repo files"
 sleep 1;
 pacman-key -a alhp.gpg
@@ -34,19 +33,15 @@ pacman-key --lsign-key 2E3B2B05A332A7DB9019797848998B4039BED1CA
 pacman-key --lsign-key 0D4D2FDAF45468F3DDF59BEDE3D0D2CD3952E298
 
 # chaotic aur repo keys
-pacman-key -a chaotic.gpg
-pacman-key --lsign-key EF925EA60F33D0CB85C44AD13056513887B78AEB
-pacman-key --lsign-key 1949E60D299007430C94DC0657F3D9CC660431DD
-pacman-key --lsign-key 3C3BE09E904072467EFEF0A395A6D49D0BBD2A8B
-pacman-key --lsign-key A3873AB27021C5DD39E0501AFBA220DFC880C036
-pacman-key --lsign-key 1F0716DC94015CAC77FA65B619A2282AFCA8A81E
-pacman-key --lsign-key 67BF8CA6DA181643C9723B4ED6C9442437365605
+pacman-key --recv-key FBA220DFC880C036 --keyserver keyserver.ubuntu.com
+pacman-key --lsign-key FBA220DFC880C036
+pacman -U 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst' 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'
 
 if ! grep -Fq "core-x86-64-v3" /etc/pacman.conf;
 then
 	sed 's/#VerbosePkgLists/VerbosePkgLists/' -i /etc/pacman.conf
 	sed 's/#ParallelDownloads/ParallelDownloads/' -i /etc/pacman.conf
-	sed -z 's/#[multilib]\n#/[multilib]\n/' -i /etc/pacman.conf
+	sed -z 's/#\[multilib\]\n#/[multilib]\n/' -i /etc/pacman.conf
 	sed -z 's/default mirrors./default mirrors.\n\n[core-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[extra-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[community-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist/' -i /etc/pacman.conf
 	echo $'[chaotic-aur]\nInclude = /etc/pacman.d/chaotic-mirrorlist' >> /etc/pacman.conf
 fi
@@ -91,11 +86,15 @@ read -p "Install Packages? <y/N>: " prompt2
 if [ $prompt2 == "y" ]
 then
 	# install packages
-	pacstrap /mnt sudo bash-completion base mkinitcpio kmod iwd linux-tkg-bmq-generic_v3 linux-tkg-bmq-generic_v3-headers amd-ucode-git nano linux-firmware-git linux-firmware-whence-git sof-firmware grub efibootmgr tpm2-tss
+	pacstrap /mnt sudo bash-completion base mkinitcpio kmod iwd \
+	linux-tkg-bmq-generic_v3 linux-tkg-bmq-generic_v3-headers \
+	amd-ucode-git nano linux-firmware-git linux-firmware-whence-git \
+	sof-firmware grub efibootmgr tpm2-tss tpm2-tools
 	cp /etc/pacman.conf /mnt/etc/ && cp /etc/pacman.d/*-mirrorlist /mnt/etc/pacman.d/
 
 	#generate fs table
 	genfstab -U /mnt >> /mnt/etc/fstab
+	sed 's/relatime/noatime/g' -i /mnt/etc/fstab
 else
 	exit
 fi
@@ -118,7 +117,13 @@ echo "craptop" > /etc/hostname
 grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=arch
 systemctl disable reflector.service
 systemctl mask reflector.service
-pacman -Syu noto-fonts noto-fonts-emoji noto-fonts-cjk sddm-kcm plasma-desktop plasma-wayland-session plasma-nm plasma-pa powerdevil kate bluedevil kscreen dolphin gwenview konsole ark wireplumber pipewire pipewire-pulse pipewire-alsa pipewire-jack firefox libva libva-mesa-driver ffmpeg nvidia-dkms power-profiles-daemon libva-utils mesa-utils usbutils gamemode
+pacman -Syu noto-fonts noto-fonts-emoji noto-fonts-cjk plasma-nm \\
+	plasma-desktop plasma-wayland-session plasma-pa powerdevil \\
+	kate bluedevil kscreen dolphin gwenview konsole ark sddm-kcm \\
+	wireplumber pipewire pipewire-pulse pipewire-alsa gamescope \\
+	pipewire-jack chromium-wayland-vaapi mesa libva-mesa-driver libva \\
+	nvidia-dkms power-profiles-daemon libva-utils mesa-utils ffmpeg \\
+	vulkan-icd-loader vulkan-tools vulkan-radeon usbutils gamemode \\
 
 # use iwd as networkmanager backend
 echo "[device]
@@ -141,25 +146,46 @@ echo SUBSYSTEM==\"block\", ENV{ID_FS_TYPE}==\"ntfs\", ENV{ID_FS_TYPE}=\"ntfs3\" 
 # enable PCI power management
 echo SUBSYSTEM==\"pci\", ATTR{power/control}=\"auto\" > /etc/udev/rules.d/80-nvidia-pm.rules
 
-# glvnd stuff
-rm -f /usr/share/glvnd/egl_vendor.d/10_nvidia.json
-
 # what in the name of all things silicon?
-rm -f /usr/share/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
+rm -rf /usr/share/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
 
 # GNOME wayland force
 # sed -e '/RUN+="\/usr\/lib\/gdm-runtime-config set daemon PreferredDisplayServer xorg"/ s/^#*/#/' -e '/RUN+="\/usr\/lib\/gdm-runtime-config set daemon WaylandEnable false"/ s/^#*/#/' /usr/lib/udev/rules.d/61-gdm.rules > /etc/udev/rules.d/61-gdm.rules
 
 # misc
-echo "MOZ_ENABLE_WAYLAND=1" >> /etc/environment
+echo "--ozone-platform=wayland
+--enable-features=VaapiVideoDecoder
+--enable-features=VaapiIgnoreDriverChecks
+--enable-features=OverlayScrollbar
+--disable-features=UseChromeOSDirectVideoDecoder
+" >> /etc/chromium-flags.conf
+
+# nvidia shader cache persistence fix
 echo "__GL_SHADER_DISK_CACHE_SKIP_CLEANUP=1" >> /etc/environment
+
+# nvidia egl fix: elegant edition
+echo "__EGL_VENDOR_LIBRARY_FILENAMES=\"/usr/share/glvnd/egl_vendor.d/50_mesa.json\"" >> /etc/environment
+
+# disable watchdogs
+echo "blacklist sp5100_tco" > /etc/modprobe.d/disable-sp5100-watchdog.conf
+
+echo "<driconf>
+   <device>
+       <application name="Default">
+           <option name="vblank_mode" value="0" />
+       </application>
+   </device>
+</driconf>
+" > /etc/drirc
+
+echo ACTION==\"add\|change\", SUBSYSTEM==\"block\", ATTR{queue/rotational}==\"0\", KERNEL==\"nvme?n?\", ATTR{queue/scheduler}=\"kyber\" > /etc/udev/rules.d/60-iosched.rules
 
 # disable bluetooth
 systemctl enable bluetooth.service
 sed 's/#AutoEnable=true/AutoEnable=false/' -i /etc/bluetooth/main.conf
 
 # bootloader settings
-sed -i -e 's/quiet/quiet mitigations=off pcie_aspm=force amd_pstate=passive/' /etc/default/grub
+sed -i -e 's/quiet/quiet mitigations=off pcie_aspm=force amd_pstate=passive nmi_watchdog=0 nowatchdog/' /etc/default/grub
 sed -i -e 's/nvidia-drm.modeset=1//g' /etc/default/grub && grub-mkconfig -o /boot/grub/grub.cfg
 
 systemctl enable sddm.service
