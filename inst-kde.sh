@@ -158,13 +158,14 @@ echo "--ozone-platform=wayland
 --enable-features=VaapiIgnoreDriverChecks
 --enable-features=OverlayScrollbar
 --disable-features=UseChromeOSDirectVideoDecoder
+--use-gl=egl
 " >> /etc/chromium-flags.conf
 
 # nvidia shader cache persistence fix
 echo "__GL_SHADER_DISK_CACHE_SKIP_CLEANUP=1" >> /etc/environment
 
-# nvidia egl fix: elegant edition
-echo "__EGL_VENDOR_LIBRARY_FILENAMES=\"/usr/share/glvnd/egl_vendor.d/50_mesa.json\"" >> /etc/environment
+# nvidia egl fix: (not) elegant edition
+rm -rf /usr/share/glvnd/egl_vendor.d/10_nvidia.json
 
 # disable watchdogs
 echo "blacklist sp5100_tco" > /etc/modprobe.d/disable-sp5100-watchdog.conf
