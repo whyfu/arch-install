@@ -73,7 +73,7 @@ then
 
 	# mount partitions, make swap
 	mount /dev/nvme0n1p2 /mnt
-	dd if=/dev/zero of=/mnt/swapfile bs=1M count=4096 status=progress
+	dd if=/dev/zero of=/mnt/swapfile bs=1M count=8192 status=progress
 	chmod 0600 /mnt/swapfile
 	mkswap -U clear /mnt/swapfile
 	swapon /mnt/swapfile
@@ -89,7 +89,7 @@ then
 	pacstrap /mnt sudo bash-completion base mkinitcpio kmod iwd \
 	linux-tkg-bmq-generic_v3 linux-tkg-bmq-generic_v3-headers \
 	amd-ucode-git nano linux-firmware-git linux-firmware-whence-git \
-	sof-firmware grub efibootmgr tpm2-tss
+	sof-firmware grub efibootmgr tpm2-tss tpm2-tools
 	cp /etc/pacman.conf /mnt/etc/ && cp /etc/pacman.d/*-mirrorlist /mnt/etc/pacman.d/
 
 	#generate fs table
@@ -118,13 +118,12 @@ grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=arch
 systemctl disable reflector.service
 systemctl mask reflector.service
 pacman -Syu noto-fonts noto-fonts-emoji noto-fonts-cjk networkmanager \\
-	gnome-shell gdm gnome-control-center eog nautilus file-roller \\
+	gnome-shell gnome-control-center nautilus file-roller xdg-user-dirs-gtk \\
 	gnome-text-editor gnome-terminal gnome-calculator gnome-calendar \\
-	xdg-user-dirs-gtk wireplumber pipewire pipewire-pulse pipewire-alsa \\
+	wireplumber pipewire pipewire-pulse pipewire-alsa gamescope eog \\
 	pipewire-jack chromium-wayland-vaapi mesa libva-mesa-driver libva \\
 	nvidia-dkms power-profiles-daemon libva-utils mesa-utils ffmpeg \\
-	vulkan-icd-loader vulkan-tools vulkan-radeon usbutils gamemode \\
-	gamescope arc-gtk-theme
+	vulkan-icd-loader vulkan-tools vulkan-radeon usbutils gamemode gdm \\
 
 # use iwd as networkmanager backend
 echo "[device]
@@ -159,6 +158,7 @@ echo "--ozone-platform=wayland
 --enable-features=VaapiIgnoreDriverChecks
 --enable-features=OverlayScrollbar
 --disable-features=UseChromeOSDirectVideoDecoder
+--use-gl=egl
 " >> /etc/chromium-flags.conf
 
 # nvidia shader cache persistence fix
