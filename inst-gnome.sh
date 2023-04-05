@@ -131,7 +131,7 @@ wifi.backend=iwd
 " > /etc/NetworkManager/conf.d/wifi_backend.conf
 
 # enable amd-pstate driver
-echo "blacklist acpi_cpufreq" > /etc/modprobe.d/amd-pstate.conf
+# echo "blacklist acpi_cpufreq" > /etc/modprobe.d/amd-pstate.conf
 
 # enable runtime D3 support from the module
 echo options nvidia \"NVreg_DynamicPowerManagement=0x02\" > /etc/modprobe.d/nvidia.conf
@@ -186,7 +186,7 @@ systemctl enable bluetooth.service
 sed 's/#AutoEnable=true/AutoEnable=false/' -i /etc/bluetooth/main.conf
 
 # bootloader settings
-sed -i -e 's/quiet/quiet mitigations=off pcie_aspm=force amd_pstate=passive nmi_watchdog=0 nowatchdog/' /etc/default/grub
+sed -i -e 's/quiet/quiet mitigations=off pcie_aspm=force nmi_watchdog=0 nowatchdog/' /etc/default/grub
 sed -i -e 's/nvidia-drm.modeset=1//g' /etc/default/grub && grub-mkconfig -o /boot/grub/grub.cfg
 
 systemctl enable gdm.service
