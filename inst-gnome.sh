@@ -46,7 +46,7 @@ then
 	sed 's/#VerbosePkgLists/VerbosePkgLists/' -i /etc/pacman.conf
 	sed 's/#ParallelDownloads/ParallelDownloads/' -i /etc/pacman.conf
 	sed -z 's/#\[multilib\]\n#/[multilib]\n/' -i /etc/pacman.conf
-	sed -z 's/default mirrors./default mirrors.\n\n[core-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[extra-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[community-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist/\n\n[built]\nSigLevel = DatabaseOptional\nInclude = \/etc\/pacman.d\/built-mirrorlist-x86-64-v3' -i /etc/pacman.conf
+	sed -z 's/default mirrors./default mirrors.\n\n[core-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[extra-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[community-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[built]\nSigLevel = DatabaseOptional\nInclude = \/etc\/pacman.d\/built-mirrorlist-x86-64-v3/' -i /etc/pacman.conf
 	echo $'[chaotic-aur]\nInclude = /etc/pacman.d/chaotic-mirrorlist' >> /etc/pacman.conf
 fi
 pacman -Syy
