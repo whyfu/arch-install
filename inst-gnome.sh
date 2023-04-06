@@ -37,16 +37,12 @@ pacman-key --recv-key FBA220DFC880C036 --keyserver keyserver.ubuntu.com
 pacman-key --lsign-key FBA220DFC880C036
 pacman -U 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst' 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'
 
-sudo pacman-key --recv-key 02213A0493457E96
-sudo pacman-key --lsign-key 02213A0493457E96
-sudo pacman -U 'https://built-aur.medzik.workers.dev/built-mirrorlist.pkg.tar.xz'
-
 if ! grep -Fq "core-x86-64-v3" /etc/pacman.conf;
 then
 	sed 's/#VerbosePkgLists/VerbosePkgLists/' -i /etc/pacman.conf
 	sed 's/#ParallelDownloads/ParallelDownloads/' -i /etc/pacman.conf
 	sed -z 's/#\[multilib\]\n#/[multilib]\n/' -i /etc/pacman.conf
-	sed -z 's/default mirrors./default mirrors.\n\n[core-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[extra-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[community-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[built]\nSigLevel = DatabaseOptional\nInclude = \/etc\/pacman.d\/built-mirrorlist-x86-64-v3/' -i /etc/pacman.conf
+	sed -z 's/default mirrors./default mirrors.\n\n[core-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[extra-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[community-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist/' -i /etc/pacman.conf
 	echo $'[chaotic-aur]\nInclude = /etc/pacman.d/chaotic-mirrorlist' >> /etc/pacman.conf
 fi
 pacman -Syy
