@@ -73,7 +73,7 @@ then
 
 	# mount partitions, make swap
 	mount /dev/nvme0n1p2 /mnt
-	dd if=/dev/zero of=/mnt/swapfile bs=1M count=4096 status=progress
+	dd if=/dev/zero of=/mnt/swapfile bs=1M count=8192 status=progress
 	chmod 0600 /mnt/swapfile
 	mkswap -U clear /mnt/swapfile
 	swapon /mnt/swapfile
@@ -117,7 +117,7 @@ echo "craptop" > /etc/hostname
 grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=arch
 systemctl disable reflector.service
 systemctl mask reflector.service
-pacman -Syu noto-fonts noto-fonts-emoji noto-fonts-cjk plasma-nm \\
+pacman -Syu noto-fonts noto-fonts-emoji noto-fonts-cjk plasma-nm spectacle \\
 	plasma-desktop plasma-wayland-session plasma-pa powerdevil \\
 	kate bluedevil kscreen dolphin gwenview konsole ark sddm-kcm \\
 	wireplumber pipewire pipewire-pulse pipewire-alsa gamescope \\
@@ -131,7 +131,7 @@ wifi.backend=iwd
 " > /etc/NetworkManager/conf.d/wifi_backend.conf
 
 # enable amd-pstate driver
-echo "blacklist acpi_cpufreq" > /etc/modprobe.d/amd-pstate.conf
+# echo "blacklist acpi_cpufreq" > /etc/modprobe.d/amd-pstate.conf
 
 # enable runtime D3 support from the module
 echo options nvidia \"NVreg_DynamicPowerManagement=0x02\" > /etc/modprobe.d/nvidia.conf
@@ -149,9 +149,6 @@ echo SUBSYSTEM==\"pci\", ATTR{power/control}=\"auto\" > /etc/udev/rules.d/80-nvi
 # what in the name of all things silicon?
 rm -rf /usr/share/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
 
-# GNOME wayland force
-# sed -e '/RUN+="\/usr\/lib\/gdm-runtime-config set daemon PreferredDisplayServer xorg"/ s/^#*/#/' -e '/RUN+="\/usr\/lib\/gdm-runtime-config set daemon WaylandEnable false"/ s/^#*/#/' /usr/lib/udev/rules.d/61-gdm.rules > /etc/udev/rules.d/61-gdm.rules
-
 # misc
 echo "--ozone-platform=wayland
 --enable-features=VaapiVideoDecoder
@@ -164,8 +161,8 @@ echo "--ozone-platform=wayland
 # nvidia shader cache persistence fix
 echo "__GL_SHADER_DISK_CACHE_SKIP_CLEANUP=1" >> /etc/environment
 
-# nvidia egl fix: (not) elegant edition
-rm -rf /usr/share/glvnd/egl_vendor.d/10_nvidia.json
+# nvidia egl fix: elegant edition
+echo "__EGL_VENDOR_LIBRARY_FILENAMES=\"/usr/share/glvnd/egl_vendor.d/50_mesa.json\"" >> /etc/environment
 
 # disable watchdogs
 echo "blacklist sp5100_tco" > /etc/modprobe.d/disable-sp5100-watchdog.conf
@@ -186,10 +183,10 @@ systemctl enable bluetooth.service
 sed 's/#AutoEnable=true/AutoEnable=false/' -i /etc/bluetooth/main.conf
 
 # bootloader settings
-sed -i -e 's/quiet/quiet mitigations=off pcie_aspm=force amd_pstate=passive nmi_watchdog=0 nowatchdog/' /etc/default/grub
+sed -i -e 's/quiet/quiet mitigations=off pcie_aspm=force nmi_watchdog=0 nowatchdog/' /etc/default/grub
 sed -i -e 's/nvidia-drm.modeset=1//g' /etc/default/grub && grub-mkconfig -o /boot/grub/grub.cfg
 
-systemctl enable sddm.service
+systemctl enable gdm.service
 systemctl disable avahi-daemon.socket
 systemctl disable avahi-daemon.service
 systemctl mask avahi-daemon.socket
