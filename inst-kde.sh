@@ -186,7 +186,7 @@ sed 's/#AutoEnable=true/AutoEnable=false/' -i /etc/bluetooth/main.conf
 sed -i -e 's/quiet/quiet mitigations=off pcie_aspm=force nmi_watchdog=0 nowatchdog/' /etc/default/grub
 sed -i -e 's/nvidia-drm.modeset=1//g' /etc/default/grub && grub-mkconfig -o /boot/grub/grub.cfg
 
-systemctl enable gdm.service
+systemctl enable sddm.service
 systemctl disable avahi-daemon.socket
 systemctl disable avahi-daemon.service
 systemctl mask avahi-daemon.socket
