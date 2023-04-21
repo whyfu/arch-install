@@ -24,7 +24,6 @@ pacman-key --init
 # x86-64_v3 binaries from ALHP repos
 curl -o alhp-mirrorlist https://somegit.dev/ALHP/alhp-mirrorlist/raw/branch/master/mirrorlist
 cp alhp-mirrorlist /etc/pacman.d/
-sed 's/#Server/Server/' -i /etc/pacman.d/alhp-mirrorlist
 curl -O https://somegit.dev/ALHP/alhp-keyring/raw/branch/master/alhp.gpg
 echo "downloaded alhp repo files"
 sleep 1;
