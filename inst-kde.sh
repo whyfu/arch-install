@@ -114,8 +114,6 @@ locale-gen
 echo "LANG=en_US.UTF-8" > /etc/locale.conf
 echo "craptop" > /etc/hostname
 grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=arch
-systemctl disable reflector.service
-systemctl mask reflector.service
 pacman -Syu noto-fonts noto-fonts-emoji noto-fonts-cjk plasma-nm spectacle \\
 	plasma-desktop plasma-wayland-session plasma-pa powerdevil \\
 	kate bluedevil kscreen dolphin gwenview konsole ark sddm-kcm \\
@@ -160,8 +158,8 @@ echo "--ozone-platform=wayland
 # nvidia shader cache persistence fix
 echo "__GL_SHADER_DISK_CACHE_SKIP_CLEANUP=1" >> /etc/environment
 
-# nvidia egl fix: elegant edition
-echo "__EGL_VENDOR_LIBRARY_FILENAMES=\"/usr/share/glvnd/egl_vendor.d/50_mesa.json\"" >> /etc/environment
+# nvidia d3cold workaround
+rm -rf /usr/share/glvnd/egl_vendor.d/10_nvidia.json
 
 # disable watchdogs
 echo "blacklist sp5100_tco" > /etc/modprobe.d/disable-sp5100-watchdog.conf
