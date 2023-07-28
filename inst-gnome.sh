@@ -3,23 +3,12 @@
 echo "[General]
 EnableNetworkConfiguration=true
 EnableIPv6=true" > /etc/iwd/main.conf
-# iwctl station wlan0 connect "SSID"
-# echo "sleeping for 5s to connect to wifi"
-# sleep 5
-# reflector --protocol https,http --latest 10 --country us,de --download-timeout 60 --verbose --sort rate --save /etc/pacman.d/mirrorlist
 
 echo "Server = https://mirrors.rit.edu/archlinux/\$repo/os/\$arch
-Server = https://geo.mirror.pkgbuild.com/\$repo/os/\$arch
-Server = http://mirror.rackspace.com/archlinux/\$repo/os/\$arch
-Server = https://mirror.rackspace.com/archlinux/\$repo/os/\$arch
 Server = http://phinau.de/arch/\$repo/os/\$arch
 Server = https://phinau.de/arch/\$repo/os/\$arch
 Server = https://cloudflaremirrors.com/archlinux/\$repo/os/\$arch
 " > /etc/pacman.d/mirrorlist
-
-systemctl disable reflector.service
-systemctl mask reflector.service
-pacman-key --init
 
 # x86-64_v3 binaries from ALHP repos
 curl -o alhp-mirrorlist https://somegit.dev/ALHP/alhp-mirrorlist/raw/branch/master/mirrorlist
@@ -27,24 +16,26 @@ cp alhp-mirrorlist /etc/pacman.d/
 sed 's/#Server/Server/' -i /etc/pacman.d/alhp-mirrorlist
 curl -O https://somegit.dev/ALHP/alhp-keyring/raw/branch/master/alhp.gpg
 echo "downloaded alhp repo files"
-sleep 1;
+
+# alhp v3 repo keys
 pacman-key -a alhp.gpg
 pacman-key --lsign-key 2E3B2B05A332A7DB9019797848998B4039BED1CA
 pacman-key --lsign-key 0D4D2FDAF45468F3DDF59BEDE3D0D2CD3952E298
 
 # chaotic aur repo keys
-pacman-key --recv-key FBA220DFC880C036 --keyserver keyserver.ubuntu.com
-pacman-key --lsign-key FBA220DFC880C036
+pacman-key --recv-key 3056513887B78AEB --keyserver keyserver.ubuntu.com
+pacman-key --lsign-key 3056513887B78AEB
 pacman -U 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst' 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'
 
 if ! grep -Fq "core-x86-64-v3" /etc/pacman.conf;
 then
 	sed 's/#VerbosePkgLists/VerbosePkgLists/' -i /etc/pacman.conf
 	sed 's/#ParallelDownloads/ParallelDownloads/' -i /etc/pacman.conf
-	sed -z 's/#\[multilib\]\n#/[multilib]\n/' -i /etc/pacman.conf
-	sed -z 's/default mirrors./default mirrors.\n\n[core-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[extra-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[community-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist/' -i /etc/pacman.conf
+	sed -z 's/#\[multilib\]\n#/[multilib-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[multilib]\n/' -i /etc/pacman.conf
+	sed -z 's/default mirrors./default mirrors.\n\n[core-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[extra-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist/' -i /etc/pacman.conf
 	echo $'[chaotic-aur]\nInclude = /etc/pacman.d/chaotic-mirrorlist' >> /etc/pacman.conf
 fi
+
 pacman -Syy
 
 cat <<EOF > nvme0n1.sfdisk
@@ -115,8 +106,6 @@ locale-gen
 echo "LANG=en_US.UTF-8" > /etc/locale.conf
 echo "craptop" > /etc/hostname
 grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=arch
-systemctl disable reflector.service
-systemctl mask reflector.service
 pacman -Syu noto-fonts noto-fonts-emoji noto-fonts-cjk networkmanager \\
 	gnome-shell gnome-control-center nautilus file-roller xdg-user-dirs-gtk \\
 	gnome-text-editor gnome-terminal gnome-calculator gnome-calendar \\
@@ -154,9 +143,7 @@ sed -e '/RUN+="\/usr\/lib\/gdm-runtime-config set daemon PreferredDisplayServer 
 
 # misc
 echo "--ozone-platform=wayland
---enable-features=VaapiVideoDecoder
---enable-features=VaapiIgnoreDriverChecks
---enable-features=OverlayScrollbar
+--enable-features=VaapiVideoDecoder,VaapiIgnoreDriverChecks,OverlayScrollbar
 --disable-features=UseChromeOSDirectVideoDecoder
 --use-gl=egl
 " >> /etc/chromium-flags.conf
