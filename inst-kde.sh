@@ -3,47 +3,39 @@
 echo "[General]
 EnableNetworkConfiguration=true
 EnableIPv6=true" > /etc/iwd/main.conf
-# iwctl station wlan0 connect "SSID"
-# echo "sleeping for 5s to connect to wifi"
-# sleep 5
-# reflector --protocol https,http --latest 10 --country us,de --download-timeout 60 --verbose --sort rate --save /etc/pacman.d/mirrorlist
 
 echo "Server = https://mirrors.rit.edu/archlinux/\$repo/os/\$arch
-Server = https://geo.mirror.pkgbuild.com/\$repo/os/\$arch
-Server = http://mirror.rackspace.com/archlinux/\$repo/os/\$arch
-Server = https://mirror.rackspace.com/archlinux/\$repo/os/\$arch
 Server = http://phinau.de/arch/\$repo/os/\$arch
 Server = https://phinau.de/arch/\$repo/os/\$arch
 Server = https://cloudflaremirrors.com/archlinux/\$repo/os/\$arch
 " > /etc/pacman.d/mirrorlist
 
-systemctl disable reflector.service
-systemctl mask reflector.service
-pacman-key --init
-
 # x86-64_v3 binaries from ALHP repos
 curl -o alhp-mirrorlist https://somegit.dev/ALHP/alhp-mirrorlist/raw/branch/master/mirrorlist
 cp alhp-mirrorlist /etc/pacman.d/
+sed 's/#Server/Server/' -i /etc/pacman.d/alhp-mirrorlist
 curl -O https://somegit.dev/ALHP/alhp-keyring/raw/branch/master/alhp.gpg
 echo "downloaded alhp repo files"
-sleep 1;
+
+# alhp v3 repo keys
 pacman-key -a alhp.gpg
 pacman-key --lsign-key 2E3B2B05A332A7DB9019797848998B4039BED1CA
 pacman-key --lsign-key 0D4D2FDAF45468F3DDF59BEDE3D0D2CD3952E298
 
 # chaotic aur repo keys
-pacman-key --recv-key FBA220DFC880C036 --keyserver keyserver.ubuntu.com
-pacman-key --lsign-key FBA220DFC880C036
+pacman-key --recv-key 3056513887B78AEB --keyserver keyserver.ubuntu.com
+pacman-key --lsign-key 3056513887B78AEB
 pacman -U 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst' 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'
 
 if ! grep -Fq "core-x86-64-v3" /etc/pacman.conf;
 then
 	sed 's/#VerbosePkgLists/VerbosePkgLists/' -i /etc/pacman.conf
 	sed 's/#ParallelDownloads/ParallelDownloads/' -i /etc/pacman.conf
-	sed -z 's/#\[multilib\]\n#/[multilib]\n/' -i /etc/pacman.conf
-	sed -z 's/default mirrors./default mirrors.\n\n[core-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[extra-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[community-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist/' -i /etc/pacman.conf
+	sed -z 's/#\[multilib\]\n#/[multilib-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[multilib]\n/' -i /etc/pacman.conf
+	sed -z 's/default mirrors./default mirrors.\n\n[core-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist\n\n[extra-x86-64-v3]\nInclude = \/etc\/pacman.d\/alhp-mirrorlist/' -i /etc/pacman.conf
 	echo $'[chaotic-aur]\nInclude = /etc/pacman.d/chaotic-mirrorlist' >> /etc/pacman.conf
 fi
+
 pacman -Syy
 
 cat <<EOF > nvme0n1.sfdisk
@@ -86,7 +78,7 @@ if [ $prompt2 == "y" ]
 then
 	# install packages
 	pacstrap /mnt sudo bash-completion base mkinitcpio kmod iwd \
-	linux-tkg-bmq-generic_v3 linux-tkg-bmq-generic_v3-headers \
+	linux-tkg-eevdf-generic_v3 linux-tkg-eevdf-generic_v3-headers \
 	amd-ucode-git nano linux-firmware-git linux-firmware-whence-git \
 	sof-firmware grub efibootmgr tpm2-tss tpm2-tools
 	cp /etc/pacman.conf /mnt/etc/ && cp /etc/pacman.d/*-mirrorlist /mnt/etc/pacman.d/
@@ -115,20 +107,17 @@ echo "LANG=en_US.UTF-8" > /etc/locale.conf
 echo "craptop" > /etc/hostname
 grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=arch
 pacman -Syu noto-fonts noto-fonts-emoji noto-fonts-cjk plasma-nm spectacle \\
-	plasma-desktop plasma-wayland-session plasma-pa powerdevil \\
+	plasma-desktop plasma-wayland-session plasma-pa powerdevil nvidia-prime \\
 	kate bluedevil kscreen dolphin gwenview konsole ark sddm-kcm \\
 	wireplumber pipewire pipewire-pulse pipewire-alsa gamescope \\
 	pipewire-jack chromium-wayland-vaapi mesa libva-mesa-driver libva \\
 	nvidia-dkms power-profiles-daemon libva-utils mesa-utils ffmpeg \\
-	vulkan-icd-loader vulkan-tools vulkan-radeon usbutils gamemode \\
+	vulkan-icd-loader vulkan-tools vulkan-radeon usbutils gamemode
 
 # use iwd as networkmanager backend
 echo "[device]
 wifi.backend=iwd
 " > /etc/NetworkManager/conf.d/wifi_backend.conf
-
-# enable amd-pstate driver
-# echo "blacklist acpi_cpufreq" > /etc/modprobe.d/amd-pstate.conf
 
 # enable runtime D3 support from the module
 echo options nvidia \"NVreg_DynamicPowerManagement=0x02\" > /etc/modprobe.d/nvidia.conf
@@ -143,23 +132,24 @@ echo SUBSYSTEM==\"block\", ENV{ID_FS_TYPE}==\"ntfs\", ENV{ID_FS_TYPE}=\"ntfs3\" 
 # enable PCI power management
 echo SUBSYSTEM==\"pci\", ATTR{power/control}=\"auto\" > /etc/udev/rules.d/80-nvidia-pm.rules
 
-# what in the name of all things silicon?
-rm -rf /usr/share/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
-
 # misc
-echo "--ozone-platform=wayland
---enable-features=VaapiVideoDecoder
---enable-features=VaapiIgnoreDriverChecks
---enable-features=OverlayScrollbar
+echo "--ozone-platform-hint=auto
+--enable-features=VaapiVideoDecodeLinuxGL,VaapiVideoDecoder,VaapiVideoEncoder,VaapiIgnoreDriverChecks,OverlayScrollbar
 --disable-features=UseChromeOSDirectVideoDecoder
---use-gl=egl
 " >> /etc/chromium-flags.conf
 
 # nvidia shader cache persistence fix
 echo "__GL_SHADER_DISK_CACHE_SKIP_CLEANUP=1" >> /etc/environment
 
-# nvidia d3cold workaround
-rm -rf /usr/share/glvnd/egl_vendor.d/10_nvidia.json
+# nvidia d3cold workaround: elegant edition: i swear this works now (believe me i was the dgpu)
+mv /usr/share/glvnd/egl_vendor.d/10_nvidia.json /usr/share/glvnd/egl_vendor.d/99_nvidia.json
+rm -f /usr/share/X11/xorg.conf.d/10-nvidia-drm-outputclass.conf
+echo "__EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/50_mesa.json" >> /etc/environment
+echo "KWIN_DRM_DEVICES=/dev/dri/card0" >> /etc/environment
+echo "KWIN_DRM_NO_AMS=1" >> /etc/environment
+
+# firefox wayland env var
+echo "MOZ_ENABLE_WAYLAND=1" >> /etc/environment
 
 # disable watchdogs
 echo "blacklist sp5100_tco" > /etc/modprobe.d/disable-sp5100-watchdog.conf
@@ -173,7 +163,7 @@ echo "<driconf>
 </driconf>
 " > /etc/drirc
 
-echo ACTION==\"add\|change\", SUBSYSTEM==\"block\", ATTR{queue/rotational}==\"0\", KERNEL==\"nvme?n?\", ATTR{queue/scheduler}=\"kyber\" > /etc/udev/rules.d/60-iosched.rules
+echo ACTION==\"add\|change\", SUBSYSTEM==\"block\", ATTR{queue/rotational}==\"0\", KERNEL==\"nvme?n?\", ATTR{queue/scheduler}=\"none\" > /etc/udev/rules.d/60-iosched.rules
 
 # disable bluetooth
 systemctl enable bluetooth.service
